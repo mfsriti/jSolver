@@ -31,10 +31,13 @@ public class Literal extends Object {
     List<Constraint> mInverseSatisfiedContraints;
     //Map<String,Constraint> mInverseSatisfiedContraints;
     
+    int mCounter;
+    
     public Literal(Variable v, int value){
         setVariable(v);
         setValue(value);
         setSelected(false);
+        resetCounter();
         mSatisfiedContraints = new ArrayList<>();
         mInverseSatisfiedContraints = new ArrayList<>();
     }
@@ -204,9 +207,25 @@ public class Literal extends Object {
        return getInverseLiteral().isSelected();
     }
     
-    private Literal getInverseLiteral(){
+    public Literal getInverseLiteral(){
         return (mVariable.getNegativeLiteral().equals(this) ? 
                 mVariable.getPositiveLiteral() : 
                 mVariable.getNegativeLiteral());
+    }
+
+    public void resetCounter() {
+        mCounter = 0;
+    }
+    
+    public void incrementCounter(){
+        mCounter++;
+    }
+
+    public int getCounter() {
+        return mCounter;
+    }
+    
+    public List<Constraint> getInverseSatisfiedContraints(){
+        return mSatisfiedContraints;
     }
 }

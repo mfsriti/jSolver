@@ -7,30 +7,30 @@
 package org.knowde.jsolver.io;
 
 import java.io.IOException;
-import org.knowde.jsolver.core.Solution;
+import org.knowde.jsolver.core.Model;
 import org.knowde.jsolver.util.FileHandler;
 
 /**
  *
  * @author msriti
  */
-public class SolutionWriter extends FileHandler{
+public class ModelWriter extends FileHandler{
     
-    private Solution mSolution;
+    private Model mModel;
 
-    public SolutionWriter(Solution solution, String outputFilePath) throws IOException{
+    public ModelWriter(Model model, String outputFilePath) throws IOException{
        super(outputFilePath, false);
-       setSolution(solution);
+       setModel(model);
     }
 
     public void write() throws IOException{
-        writeLine(mSolution.toString());
+        writeLine(mModel.toString());
         finalizeWrite();
-        System.out.println("SolutionWriter.write(): writing file " + getFileName());
+        System.out.println("ModelWriter.write(): writing file " + getFileName());
     }
 
-    private void setSolution(Solution solution) {
-        mSolution = solution;
+    private void setModel(Model model) {
+        mModel = model;
     }
 
     private void finalizeWrite() throws IOException {

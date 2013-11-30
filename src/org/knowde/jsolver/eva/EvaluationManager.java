@@ -21,11 +21,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import org.knowde.jsolver.core.Solution;
+import org.knowde.jsolver.core.Model;
 import org.knowde.jsolver.core.Solver;
 import org.knowde.jsolver.core.SolverFactory;
 import org.knowde.jsolver.io.ProblemReader;
-import org.knowde.jsolver.io.SolutionWriter;
+import org.knowde.jsolver.io.ModelWriter;
 import org.knowde.jsolver.util.FileHandler;
 
 /**
@@ -36,15 +36,15 @@ public class EvaluationManager {
    
     String mProblemsDir;
     
-    String mSolutionsDir;
+    String mModelsDir;
     
     private final static String PROBLEM_SHORT_DIR_NAME = "problems";
-    private final static String SOLUTION_SHORT_DIR_NAME = "solutions";
-    private final static String SOLUTION_FILE_EXT = ".sol";
+    private final static String MODEL_SHORT_DIR_NAME = "models";
+    private final static String MODEL_FILE_EXT = "mod";
     
     public EvaluationManager(String sourceDir, String targetDir){
         setProblemsDir(sourceDir);
-        setSolutionsDir(targetDir);
+        setModelsDir(targetDir);
     }
     
     public void process() throws IOException {
@@ -53,10 +53,11 @@ public class EvaluationManager {
             while(it.hasNext()){
                 ProblemReader pr = new ProblemReader((File)it.next());
                 Solver solver = SolverFactory.getSolver(pr.getProblem());
-                Solution solution = solver.solve();
-                String outputFile = pr.getFilePath().replace(PROBLEM_SHORT_DIR_NAME, SOLUTION_SHORT_DIR_NAME)+"."+SOLUTION_FILE_EXT;
-                SolutionWriter sw = new SolutionWriter(solution, outputFile);
+                Model model = solver.solve();
+                String outputFile = pr.getFilePath().replace(PROBLEM_SHORT_DIR_NAME, MODEL_SHORT_DIR_NAME)+"."+MODEL_FILE_EXT;
+                ModelWriter sw = new ModelWriter(model, outputFile);
                 sw.write();
+                System.out.println("Time: "+ model.getTime());
             }
     }
 
@@ -64,7 +65,7 @@ public class EvaluationManager {
        mProblemsDir = sourceDir;
     }
 
-    private void setSolutionsDir(String targetDir) {
-       mSolutionsDir = targetDir;
+    private void setModelsDir(String targetDir) {
+       mModelsDir = targetDir;
     }
 }

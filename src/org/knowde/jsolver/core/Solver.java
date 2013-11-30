@@ -23,11 +23,11 @@ public class Solver {
      */
     Stack<Literal> mStack;
     
-    int mUnselectedVariablesNumber;
+    //int mUnselectedVariablesNumber;
    
-    Variable [] mUnselectedVariables;
+    //List<Variable> mUnselectedVariables;
     
-    Solution mCurrentSolution;
+    Model mCurrentModel;
     
     List<Constraint> mSelectedConstraints;
     
@@ -39,49 +39,45 @@ public class Solver {
         sSolver = this;
         mProblem = p;
         mStack = new Stack();
-        mCurrentSolution = null;
+        mCurrentModel = null;
         mSelectedConstraints = new ArrayList<>();
-        setRemainingVariables(mProblem.getVariables());
+       // mUnselectedVariables = Arrays.asList(mProblem.getVariables());
     }
-  
-    private void setRemainingVariables(Variable [] rvars){
-      mUnselectedVariablesNumber = rvars.length;
-      mUnselectedVariables = new Variable[mUnselectedVariablesNumber];
-      //mRemainingVariables = rvars.values().toArray(new Variable[mRemainingVariablesNumber]);
-      System.arraycopy(rvars, 0, mUnselectedVariables, 0, mUnselectedVariablesNumber);
-    }
-
-    public Solution solve(){
-        Literal currentPath = selectPath(); int counter = 0; int solCounter = 0;
+    
+    public Model solve(){
+        long startTime = System.currentTimeMillis();
+        Literal currentLiteral = selectLiteral(); int counter = 0; int solCounter = 0;
         //System.out.println("Normal: "+currentPath);
         while (!mStack.empty()){ // same as: while (currentPath != null)
             //System.err.println(++counter+" "+currentPath);
-            List<Constraint> list = currentPath.satisfyConstraints();
+            List<Constraint> list = currentLiteral.satisfyConstraints();
             if (list!=null){
                 for (Constraint con: list){
                     mSelectedConstraints.add(con);
                 }
             }
             if (mProblem.solved()){
-               saveCurrentSolution(++solCounter, true, false);
-               currentPath = backtrack(false);// to find the next solution
+               long stopTime = System.currentTimeMillis();
+               saveCurrentModel(++solCounter, stopTime-startTime, false, false);
+               currentLiteral = backtrack(false);// to find the next solution
                //System.out.println("Backtrack: "+currentPath);
+               break;
             } else {
-                boolean wellDecremented = currentPath.decrementInverseSatisfiedContraints();
+                boolean wellDecremented = currentLiteral.decrementInverseSatisfiedContraints();
                 if (wellDecremented) {
-                    currentPath = selectPath(); // we select another path for the next loop iteration
+                    currentLiteral = selectLiteral(); // we select another path for the next loop iteration
                     //System.out.println("Normal: "+currentPath);
                 } else { 
-                    currentPath = backtrack(false); // we don't to increment because in this case the decrement function do the job
+                    currentLiteral = backtrack(false); // we don't to increment because in this case the decrement function do the job
                     //System.out.println("Backtrack: "+currentPath);
                 }
             }
         }
         
         if (solCounter==0)
-            alertProblemWithoutSolution();
+            alertProblemWithoutModel();
         
-        return mCurrentSolution;
+        return mCurrentModel;
      }
 
     protected Literal backtrack(boolean withIncrement){
@@ -99,9 +95,9 @@ public class Solver {
                 literal.incrementInverseSatisfiedContraints();
             }
             Variable node = literal.getVariable();
-            literal = selectLiteral(node);
+            literal = (literal.isInverseLiteralSelected() ? null: literal.getInverseLiteral());
             if (literal==null) {// means that the node is explored 
-                unselectVariable(node);
+                node.unselectLiterals();
                 literal = backtrack(true);
             } 
             if (literal!=null && (mStack.empty() || !literal.equals(mStack.peek()))){
@@ -111,75 +107,24 @@ public class Solver {
         return literal;
     }
     
-    protected Literal selectPath(){
-        Constraint con = selectConstraint();
-        Literal literal = selectPath(con.getRemainingLiteral());
-        
-        //System.out.println("con="+con+", len:"+con.getLength());
+    protected Literal selectLiteral(){
+        Literal literal = mProblem.selectLiteral();
         literal.select();
-        if (con.isProcessable()){ // node processing deduction
-            literal.getVariable().selectLiterals();
-        } 
+        
+        List<Constraint> list = literal.getInverseSatisfiedContraints();
+        for (Constraint con: list){
+            if (con.isProcessable()){ // node processing deduction
+                literal.getVariable().selectLiterals();
+                break;
+            }    
+        }
+        
+        mStack.push(literal);
+           
         return literal;
     }
-    
-    private Literal selectPath(Literal literal) {
-        Variable node = literal.getVariable();
-        node = selectVariable(node);
-        if (node==null){
-            literal = backtrack(true);
-        } else {
-            mStack.push(literal);
-        }
-        return literal;   
-    }
-
-    /**
-     *  Select a random variable and decrement the number of the remaining variables.
-       * @return 
-     */
-    protected Variable selectVariable(){
-       Variable selected = null;
-       if (mUnselectedVariablesNumber!=0)
-           selected = mUnselectedVariables[--mUnselectedVariablesNumber];
-       return selected;
-    }
-    
-    protected Variable selectVariable(Variable variable){
-        switch (mUnselectedVariablesNumber){
-            case 0: variable = null; break;
-            case 1: --mUnselectedVariablesNumber; break;
-            default: 
-                for (int i=0; i<mUnselectedVariablesNumber; i++){
-                    if (mUnselectedVariables[i].getValue() == variable.getValue()){
-                        mUnselectedVariables[i] = mUnselectedVariables[--mUnselectedVariablesNumber];
-                    }
-                }
-        }
-        return variable;
-    }
-    
-    protected void unselectVariable(Variable var){
-        var.unselectLiterals();
-        mUnselectedVariables[mUnselectedVariablesNumber++] = var;
-    }
-
-    protected Literal selectLiteral(Variable node){
-        Literal selected = null;
-        if (!node.explored()) {
-            if (node.isPositiveLiteralSelected())  {
-                node.selectNegativeLiteral();
-                selected = node.getNegativeLiteral();
-            } else {
-                node.selectPositiveLiteral();
-                selected = node.getPositiveLiteral();
-            }
-        }
-        
-        return selected;
-    }
   
-    private void saveCurrentSolution(int solCounter, boolean print, boolean check){
+    private void saveCurrentModel(int solCounter, long time, boolean print, boolean check){
         int []lits = new int[mStack.size()];
         int litsSolCounter = 0;
         for (int i=0; i<lits.length; i++){
@@ -190,19 +135,20 @@ public class Solver {
         int []litsSol = new int[litsSolCounter];
         System.arraycopy(lits, 0, litsSol, 0, litsSolCounter);
         Arrays.sort(litsSol);
-        Solution sol = new Solution(mProblem.getName(), litsSol);
-        
+        Model model = new Model(mProblem.getName(), litsSol);
+        model.setTime(time);
         //@TODO: compare the solution, may be implemented int PrefSolver
-        mCurrentSolution = sol;
+        mCurrentModel = model;
         
         if (print){
-            System.out.print("Problem \""+mProblem.getName()+"\": solution "+solCounter+" => ");
-            System.out.println(sol);
+            System.out.print("Problem \""+mProblem.getName()+"\": model "+solCounter+" => ");
+            System.out.println(model);
         }
         
         if (check){
             //check the satisfied constraint only, because we are supposed to find them all satisfied
             boolean checked = true;
+            System.out.println("Constraints size: " + mSelectedConstraints.size());
             for (Constraint c: mSelectedConstraints){
                 boolean b = false;
                 for (int v: litsSol){
@@ -216,19 +162,15 @@ public class Solver {
                     break;
             }
             if (!checked){
-                System.out.println("-- Invalid solution");
+                System.out.println("-- Invalid model");
             } else {
-                System.out.println("-- Valid solution");
+                System.out.println("-- Valid model");
             }
         }
     }
     
-    private void alertProblemWithoutSolution(){
-        System.out.println("Problem \""+mProblem.getName()+"\": No solution found.");
-    }
-
-    private Constraint selectConstraint() {
-        return mProblem.getSmallestConstraint();
+    private void alertProblemWithoutModel(){
+        System.out.println("Problem \""+mProblem.getName()+"\": No model found.");
     }
     
 }

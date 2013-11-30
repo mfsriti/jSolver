@@ -17,7 +17,7 @@ public class EvaluationManagerTest {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws IOException {
-        EvaluationManager em = new EvaluationManager("D:\\test\\jSolver\\small sat\\problems", "D:\\test\\jSolver\\small sat\\solutions");
+        EvaluationManager em = new EvaluationManager("C:\\test\\jSolver\\problems\\Random_Benchmarks", "C:\\test\\jSolver\\models\\Random_Benchmarks");
         em.process();
     }
 }

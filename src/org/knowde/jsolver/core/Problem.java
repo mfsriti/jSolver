@@ -132,7 +132,7 @@ public class Problem {
         return null;
     }
     
-    public List<Constraint> getSmallestConstraints() {
+    protected List<Constraint> getSmallestConstraints() {
         String[] strKeys = mConstraints.keySet().toArray(new String[0]);
         int[] keys = new int[strKeys.length];
         for (int i=0; i < strKeys.length; i++) {
@@ -146,5 +146,61 @@ public class Problem {
             }        
         }
         return null;
+    }
+    
+    public Literal selectLiteral(){
+        Literal selectedLiteral = null;
+        // list des contraintes le plus petites
+        List<Constraint> smallestCons = getSmallestConstraints();
+        // calculer le nombre de literaux
+        List<Literal> literals = getRemainingLiteralsFromConstraints(smallestCons,true);
+        // calculer les formules: au meme temps la valeur max
+        // choisir un literal
+        selectedLiteral = getLiteralFromMOM(literals);
+        // remettre les compteurs a zero      
+        resetLiteralsCounters(literals);
+        return selectedLiteral;
+    } 
+
+    private List<Literal> getRemainingLiteralsFromConstraints(List<Constraint> constraints, boolean withCounting) {
+       List<Literal> result = new ArrayList<>();
+       for (Constraint con: constraints){
+           Literal[] literals = con.getLiterals();
+           for(Literal lit: literals){
+               if (!lit.isSelected() && !lit.isInverseLiteralSelected()){
+                    if (!result.contains(lit)){
+                        result.add(lit);
+                    } 
+                    if (withCounting){
+                        lit.incrementCounter();
+                    }
+               }
+           }
+       }
+       return result;
+    }
+    
+    private void resetLiteralsCounters(List<Literal> literals){
+        for (Literal lit: literals){
+            lit.resetCounter();
+        }
+    }
+
+    private Literal getLiteralFromMOM(List<Literal> literals) {
+        Literal literalWithMaxValue = null;
+        int maxValue=0;
+        for (Literal lit: literals){
+            int formulaValue =(lit.getCounter() + lit.getInverseLiteral().getCounter()) * 1
+                    + (lit.getCounter() * lit.getInverseLiteral().getCounter()) ; 
+            if (formulaValue>maxValue){
+                maxValue = formulaValue;
+                literalWithMaxValue = lit;
+            }
+        }
+        literalWithMaxValue = (literalWithMaxValue.getCounter() > 
+                literalWithMaxValue.getInverseLiteral().getValue() ?
+                literalWithMaxValue : literalWithMaxValue.getInverseLiteral());
+        return literalWithMaxValue;
+        
     }
 }

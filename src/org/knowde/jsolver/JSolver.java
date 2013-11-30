@@ -7,7 +7,7 @@ package org.knowde.jsolver;
 import java.io.IOException;
 import org.knowde.jsolver.core.Problem;
 import org.knowde.jsolver.core.ProblemFactory;
-import org.knowde.jsolver.core.Solution;
+import org.knowde.jsolver.core.Model;
 import org.knowde.jsolver.core.Solver;
 import org.knowde.jsolver.core.SolverFactory;
 import org.knowde.jsolver.io.ProblemReader;
@@ -61,7 +61,11 @@ public class JSolver {
         ProblemReader pr = new ProblemReader("C:\\users\\msriti\\Dropbox\\research\\hachemi\\gen-200var-0-800-cl-0.cnf_graphs-v50-d0.03912-n10_1_tc.dat.noptsat");
         
         solver = SolverFactory.getSolver(pr.getProblem());
-        Solution s = solver.solve();
-       // System.out.println(s);
+        long startTime = System.currentTimeMillis();
+        Model s = solver.solve();
+        long stopTime = System.currentTimeMillis();
+        long elapsedTime = stopTime - startTime;
+        System.out.println("Model: "+ s);
+        System.out.println("Time: "+ elapsedTime);
     }
 }

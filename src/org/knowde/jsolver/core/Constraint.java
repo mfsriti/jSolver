@@ -128,5 +128,9 @@ public class Constraint extends Object{
         }
         return false;
     }
+    
+    public Literal[] getLiterals(){
+        return mLiterals;
+    }
 
 }

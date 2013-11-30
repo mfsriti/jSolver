@@ -10,17 +10,19 @@ package org.knowde.jsolver.core;
  *
  * @author msriti
  */
-public class Solution {
+public class Model {
     
     String mProblemName;
     
-    //Only problem literals provided in the solution
-    int [] mSolutionLiterals;
+    //Only problem literals provided in the model
+    int [] mModelLiterals;
     
     // All problem literals
     int [] mProblemLiterals;
     
-    public Solution(String problem, int [] lits){
+    long mTime;
+    
+    public Model(String problem, int [] lits){
         setProblemName(problem);
         setLiterals(lits);
     }
@@ -30,8 +32,8 @@ public class Solution {
     }
 
     private void setLiterals(int[] literals) {
-        mSolutionLiterals = new int[literals.length];
-        System.arraycopy(literals, 0, mSolutionLiterals, 0, literals.length);
+        mModelLiterals = new int[literals.length];
+        System.arraycopy(literals, 0, mModelLiterals, 0, literals.length);
     }
     
     public String getProblemName(){
@@ -41,17 +43,25 @@ public class Solution {
     @Override
     public String toString(){
         String str = "";
-        for (int i=0; i<mSolutionLiterals.length; i++){
-            str += mSolutionLiterals[i] + " ";
+        for (int i=0; i<mModelLiterals.length; i++){
+            str += mModelLiterals[i] + " ";
         }
         return str;
     }
     /*
-    public int[][] computeDerivedSolutions(){
-        int combinatory = factorial(mProblemLiterals.length - mSolutionLiterals.length)
-        int solutions = new int[combinatory][mProblemLiterals.length]
+    public int[][] computeDerivedModels(){
+        int combinatory = factorial(mProblemLiterals.length - mModelLiterals.length)
+        int models = new int[combinatory][mProblemLiterals.length]
                 
     }
     */
+    
+    public void setTime(long time){
+        mTime = time;
+    }
+    
+    public long getTime(){
+        return mTime;
+    }
     
 }

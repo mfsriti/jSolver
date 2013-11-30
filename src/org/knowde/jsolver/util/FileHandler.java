@@ -35,8 +35,10 @@ public class FileHandler {
 
     public FileHandler(File file, boolean forRead) throws IOException {
         this(file);
-        if(!file.exists())
+        if(!file.exists()){
+            new File(file.getAbsolutePath().replace(file.getName(),"")).mkdirs();
             file.createNewFile();
+        }
 
         if (mFile.isFile())
                 open (forRead);
